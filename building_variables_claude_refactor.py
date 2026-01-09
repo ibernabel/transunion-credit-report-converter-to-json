@@ -204,9 +204,6 @@ class CreditReportParser:
             ]
         except Exception as e:
             print(f"Error parsing open accounts summary: {e}")
-
-
-
       
     def parse_open_accounts_details(self):
         """
@@ -267,26 +264,6 @@ class CreditReportParser:
             print(f"Comprehensive error parsing open accounts details: {e}")
             import traceback
             traceback.print_exc()
-        def parse(self):
-            """
-            Parse the entire credit report.
-            """
-            self.parse_inquirer_info()
-            self.parse_personal_data()
-            self.parse_credit_score()
-            self.parse_open_accounts_summary()
-            self.parse_open_accounts_details()
-
-            return self.parsed_data
-
-        def to_json(self, indent=2):
-            """
-            Convert parsed data to JSON.
-
-            :param indent: Indentation for JSON formatting
-            :return: JSON string of parsed data
-            """
-            return json.dumps(self.parsed_data, indent=indent, ensure_ascii=False)
 
     def _process_accounts_details_rows(self, details_rows):
         """
@@ -382,3 +359,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
