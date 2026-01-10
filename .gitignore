@@ -19,7 +19,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -185,5 +185,4 @@ find_text.py
 datos_personales.py
 *.png
 *.jpeg
-*.json
 *.pdf
