@@ -29,7 +29,7 @@ class PersonalInfo(BaseReportModel):
     addresses: List[str] = Field(default_factory=list, alias="direcciones")
 
 class CreditScore(BaseReportModel):
-    score: str
+    score: Optional[int] = None
     factors: List[str] = Field(default_factory=list)
 
 class AccountSummary(BaseReportModel):

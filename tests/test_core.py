@@ -47,7 +47,7 @@ def test_parser_engine_basic(sample_text):
 
     score = parser.parse_score()
     assert score is not None
-    assert score.score == "750"
+    assert score.score == 750
     assert "alto cumplimiento" in score.factors
 
 def test_scrubber():
