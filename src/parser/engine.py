@@ -34,39 +34,49 @@ class ParserEngine:
         if dotall:
             flags |= re.DOTALL
         match = re.search(pattern, source, flags)
-        return match.group(group).strip() if match else None
+        if match:
+            value = match.group(group)
+            return value.strip() if value else ""
+        return None
 
     def parse_inquirer(self) -> InquirerInfo:
         return InquirerInfo(
             subscriber=self.extract_field(r"suscriptor:\s*(.*)"),
-            user=self.extract_field(r"usuario:\s*(.*)"),
-            consultation_date=self.extract_field(r"fecha:\s*(.*)"),
-            consultation_time=self.extract_field(r"hora:\s*(\d{2}:\d{2}:\d{2})")
+            user=self.extract_field(r"usuario:[\s\n]+([^\n]+)"),
+            consultation_date=self.extract_field(r"fecha:[\s\n]+(\d{2}/\d{2}/\d{4})"),
+            consultation_time=self.extract_field(r"hora:[\s\n]+(\d{2}:\d{2}(?::\d{2})?\s*(?:am|pm)?)")
         )
 
     def parse_personal_data(self) -> PersonalInfo:
         phones = PersonalPhones(
-            home=self.extract_field(r"casa:\s*(.*)"),
-            work=self.extract_field(r"trabajo:\s*(.*)"),
-            mobile=self.extract_field(r"celular:\s*(.*)")
+            home=self.extract_field(r"casa:[\s\n]*(\d+[- ]\d+[- ]\d+)?"),
+            work=self.extract_field(r"trabajo:[\s\n]*(\d+[- ]\d+[- ]\d+)?"),
+            mobile=self.extract_field(r"celular:[\s\n]*(\d+[- ]\d+[- ]\d+)?")
         )
         
         addr_match = re.search(r"direcciones\s*(.*?)(?=\stransunion|resumen|detalle|indagaciones|puntuacion|$)", self.text, re.DOTALL)
         addresses = []
         if addr_match:
-            raw_addr = addr_match.group(1).split('*')
-            addresses = [a.strip().replace('\n', ' ') for a in raw_addr if a.strip()]
+            # Split by bullet point or newline
+            raw_addr = re.split(r"[\n\*]|•", addr_match.group(1))
+            addresses = [a.strip() for a in raw_addr if a.strip() and len(a.strip()) > 5]
+
+        # Robust extraction: match value until next known label
+        labels = ["apellidos", "fecha nacimiento", "edad", "ocupacion", "lugar nacimiento", "pasaporte", "estado civil", "telefonos", "direcciones"]
+        def get_val(label, next_labels):
+            pattern = rf"{label}[\s\n]+(.*?)(?=\s*(?:{'|'.join(next_labels)}|$))"
+            return self.extract_field(pattern, dotall=True)
 
         return PersonalInfo(
-            identification=self.extract_field(r"cedula\s+([^\s\n]+)"),
-            first_names=self.extract_field(r"nombres\s+(.*)"),
-            last_names=self.extract_field(r"apellidos\s+(.*)"),
-            birth_date=self.extract_field(r"fecha nacimiento\s+(.*)"),
-            age=int(self.extract_field(r"edad\s+(\d+)") or 0),
-            occupation=self.extract_field(r"ocupacion\s+(.*)"),
-            birth_place=self.extract_field(r"lugar nacimiento\s+(.*)"),
-            passport=self.extract_field(r"pasaporte\s+(.*)"),
-            marital_status=self.extract_field(r"estado civil\s+(.*)"),
+            identification=self.extract_field(r"cedula\s+#?([^\s\n]+)"),
+            first_names=get_val("nombres", labels[0:]),
+            last_names=get_val("apellidos", labels[1:]),
+            birth_date=self.extract_field(r"fecha nacimiento[\s\n]+(\d{2}/\d{2}/\d{4})"),
+            age=int(self.extract_field(r"edad[\s\n]+(\d+)") or 0),
+            occupation=get_val("ocupacion", labels[4:]),
+            birth_place=get_val("lugar nacimiento", labels[5:]),
+            passport=get_val("pasaporte", labels[6:]),
+            marital_status=get_val("estado civil", labels[7:]),
             phones=phones,
             addresses=addresses
         )
@@ -102,25 +112,31 @@ class ParserEngine:
         summaries = []
         
         try:
-            start_idx = 0
-            for i, line in enumerate(lines):
-                if "cuentas saldo" in line:
-                    start_idx = i + 1
-                    break
+            # Data starts after the last occurrence of 'us$' in the header
+            all_us_indices = [i for i, l in enumerate(lines) if l == "us$"]
+            if not all_us_indices:
+                return []
+            
+            start_idx = all_us_indices[-1] + 1
             
             end_idx = len(lines)
             for i, line in enumerate(lines):
-                if "total general >>" in line:
+                if "total general" in line:
                     end_idx = i
                     break
             
             data_chunk = lines[start_idx:end_idx]
-            # While the prompt asked to abandon line counting for details, summaries in Transunion 
-            # are typically fixed-column tables. We'll keep it as is unless we find a better anchor 
-            # for these specific rows.
+            
             for i in range(0, len(data_chunk), 11):
                 row = data_chunk[i:i+11]
                 if len(row) < 11: break
+                
+                # If the row is a subtotal, we skip it and DONT advance by a fixed 11
+                # because the subtotal row itself might be shifted or shorter.
+                # Actually, in Transunion the subtotal row IS 11 elements too.
+                if "sub-total" in row[0].lower() or "total general" in row[0].lower():
+                    continue
+
                 try:
                     summaries.append(AccountSummary(
                         subscriber=row[0],
@@ -183,18 +199,15 @@ class ParserEngine:
 
     def parse_account_details_v2(self) -> List[AccountDetail]:
         """Refactored version using pattern anchoring and block reconstruction."""
-        section_match = re.search(r"detalle de cuentas abiertas\s*(.*?)(?=\sdetalle de cuentas cerradas|indagaciones|$)", self.text, re.DOTALL)
+        section_match = re.search(r"detalle de cuentas abiertas\s*(.*?)(?=\sdetalle de cuentas cerradas|totales generales|indagaciones|$)", self.text, re.DOTALL)
         if not section_match:
             return []
             
         section_text = section_match.group(1)
         
         # We find all "Type >> Sub" anchors. 
-        # A more robust way: Find all instances of ">>" and the line containing it.
-        # Then, everything between one ">>" line and the next is a block.
-        
-        # Find all start positions of Type >> Sub
-        headers = list(re.finditer(r"([^\n>]+>>[^\n]+)", section_text))
+        # Support both '>>' and '»', and handle cases where Type is missing (starts with »)
+        headers = list(re.finditer(r"([^\n>»]*[>»]+[^\n]+)", section_text))
         
         details = []
         for i in range(len(headers)):
@@ -207,32 +220,73 @@ class ParserEngine:
             content = section_text[start_header.end():end_pos]
             
             try:
-                parts = header_line.split(">>")
-                acc_type = parts[0].strip()
-                # The first part of subscriber is here, but it might wrap into 'content'
-                initial_sub = parts[1].strip()
+                parts = re.split(r">>|»|>", header_line)
+                parts = [p.strip() for p in parts if p.strip()]
                 
-                # If content starts with more text before a status/date, it's wrapped subscriber
-                # Status keywords list (extensible)
-                status_kw = r"(vigente|cancelada|atraso|proceo judicial|reestructurado)"
-                date_pat = r"\d{2}/\d{2}/\d{4}"
-                
-                # Match anything until we hit a status keyword or date at the start of a line
-                wrap_match = re.search(rf"^(.*?)(?=\s*(?:{status_kw}|{date_pat}))", content, re.DOTALL | re.I)
-                if wrap_match and wrap_match.group(1).strip():
-                    subscriber = f"{initial_sub} {wrap_match.group(1).strip()}".replace('\n', ' ')
-                    # Clean up double spaces
-                    subscriber = " ".join(subscriber.split())
-                    remaining_content = content[wrap_match.end():]
+                if len(parts) >= 2:
+                    acc_type = parts[0]
+                    initial_sub = parts[1]
+                elif len(parts) == 1:
+                    # Inherit from last known if possible, else unknown
+                    acc_type = details[-1].account_type if details else "unknown"
+                    initial_sub = parts[0]
                 else:
-                    subscriber = initial_sub
-                    remaining_content = content
+                    acc_type = details[-1].account_type if details else "unknown"
+                    initial_sub = "unknown"
+                
+                # A block might contain multiple records (RD$ and US$ variants)
+                # We split the block content by the presence of a behavior vector, 
+                # but we keep the vector as part of the sub-block.
+                # Anchor: behavior vector is usually the end of a record.
+                
+                # Split content into parts where each part ends with a behavior vector
+                vector_pat = r"([0-9x? \+]{11,}[0-9x? \+\-]{1,})"
+                sub_records = []
+                last_end = 0
+                for v_match in re.finditer(vector_pat, content):
+                    sub_records.append(content[last_end:v_match.end()])
+                    last_end = v_match.end()
+                
+                # If there's content left after the last vector (shouldn't happen much in good blocks)
+                if last_end < len(content) and len(content[last_end:].strip()) > 20:
+                    sub_records.append(content[last_end:])
 
-                detail = self._extract_detail_from_content(acc_type, subscriber, remaining_content)
-                if detail:
-                    details.append(detail)
+                if not sub_records:
+                    # Fallback: maybe no vector found, try whole content
+                    sub_records = [content]
+
+                for record_content in sub_records:
+                    # For the first record, we might have wrapped subscriber text
+                    # For subsequent ones, we use the same header info
+                    status_kw_pat = r"(al dia|vigente|cancelada|atraso|proceso judicial|reestructurado|legal)"
+                    date_pat = r"\d{2}/\d{4}"
+                    
+                    wrap_match = re.search(rf"(.*?)(?=\s*(?:{status_kw_pat}|{date_pat}))", record_content, re.DOTALL | re.I)
+                    
+                    current_sub = initial_sub
+                    current_acc_type = acc_type
+                    
+                    if wrap_match:
+                        added_sub = wrap_match.group(1).strip()
+                        if added_sub and len(added_sub) > 0:
+                            # Is it really a subscriber wrap or just noise?
+                            # If it's the first record in the block, it's likely a wrap.
+                            # If it's the 2nd+, it might be noise before the status.
+                            if record_content == sub_records[0]:
+                                current_sub = f"{initial_sub} {added_sub}".strip().replace('\n', ' ')
+                                current_sub = " ".join(current_sub.split())
+                        
+                        remaining_record = record_content[wrap_match.end():]
+                    else:
+                        remaining_record = record_content
+
+                    detail = self._extract_detail_from_content(current_acc_type, current_sub, remaining_record)
+                    if detail:
+                        details.append(detail)
             except Exception as e:
                 logger.warning(f"Failed to parse account block starting with {header_line}: {e}")
+                import traceback
+                logger.debug(traceback.format_exc())
                 
         return details
 
@@ -247,18 +301,19 @@ class ParserEngine:
             vector = [int(c) if c.isdigit() else None for c in raw_v]
             content = content[:vector_match.start()] + content[vector_match.end():]
 
-        # 2. Dates (DD/MM/YYYY)
-        dates = re.findall(r"(\d{2}/\d{2}/\d{4})", content)
+        # 2. Dates (MM/YYYY)
+        dates = re.findall(r"(\d{2}/\d{4})", content)
         update_date = dates[0] if len(dates) > 0 else "n/a"
         opening_date = dates[1] if len(dates) > 1 else "n/a"
         expiration_date = dates[2] if len(dates) > 2 else None
         # Remove all dates to avoid picking them up as numbers
-        content = re.sub(r"\d{2}/\d{2}/\d{4}", " ", content)
+        content = re.sub(r"\d{2}/\d{4}", " ", content)
 
-        # 3. Currency (DOP/USD)
-        currency_match = re.search(r"\b(dop|usd)\b", content, re.I)
-        currency = currency_match.group(1).upper() if currency_match else "DOP"
-        content = re.sub(r"\b(dop|usd)\b", " ", content, flags=re.I)
+        # 3. Currency (DOP/USD/RD$/US$)
+        currency_match = re.search(r"(?:\b)(dop|usd|rd\$|us\$)", content, re.I)
+        raw_currency = currency_match.group(1).upper() if currency_match else "DOP"
+        currency = "USD" if "US" in raw_currency else "DOP"
+        content = re.sub(r"(?:\b)(dop|usd|rd\$|us\$)", " ", content, flags=re.I)
 
         # 4. Modality (Usually looks like "12/36 MENSUAL" or similar)
         # Often contains a slash but not a full date
@@ -269,7 +324,7 @@ class ParserEngine:
 
         # 5. Status (Vigente, Cancelada, etc.)
         # Usually the first word or one of these keywords
-        status_kw = ["vigente", "cancelada", "atraso", "proceso judicial", "reestructurado", "legal"]
+        status_kw = ["al dia", "vigente", "cancelada", "atraso", "proceso judicial", "reestructurado", "legal"]
         status = "unknown"
         for kw in status_kw:
             if kw in content.lower():

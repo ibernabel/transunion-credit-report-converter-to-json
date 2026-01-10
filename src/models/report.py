@@ -5,10 +5,10 @@ class BaseReportModel(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 class InquirerInfo(BaseReportModel):
-    subscriber: str = Field(..., alias="suscriptor")
-    user: str = Field(..., alias="usuario")
-    consultation_date: str = Field(..., alias="fecha_consulta")
-    consultation_time: str = Field(..., alias="hora_consulta")
+    subscriber: Optional[str] = Field(None, alias="suscriptor")
+    user: Optional[str] = Field(None, alias="usuario")
+    consultation_date: Optional[str] = Field(None, alias="fecha_consulta")
+    consultation_time: Optional[str] = Field(None, alias="hora_consulta")
 
 class PersonalPhones(BaseReportModel):
     home: Optional[str] = Field(None, alias="casa")
