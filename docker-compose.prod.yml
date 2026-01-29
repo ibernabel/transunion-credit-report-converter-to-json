@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transunion-parser-prod
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist only logs and backups (no source code mount)
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./temp_uploads:/app/temp_uploads
+    environment:
+      - PYTHONPATH=/app
+      - DEBUG=0
+      - MAX_WORKERS=4  # Multiple workers for production
+      - LOG_LEVEL=info
+      - MAX_LOG_SIZE_MB=100
+      - BACKUP_RETENTION_DAYS=7
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: always
+    # Production command with multiple workers
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+networks:
+  default:
+    name: transunion-parser-prod-network

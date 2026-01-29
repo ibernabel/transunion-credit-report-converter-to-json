@@ -186,3 +186,9 @@ datos_personales.py
 *.png
 *.jpeg
 *.pdf
+
+# Project-specific directories
+logs/
+backups/
+temp_uploads/
+myenv/
