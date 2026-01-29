@@ -64,9 +64,10 @@ class TestParseEndpoint:
         }
         response = test_client.post("/v1/parse", files=files)
         
-        # Should return 400 Bad Request or 500 depending on validation
-        assert response.status_code in [400, 500]
+        # Should return 400 Bad Request for empty file
+        assert response.status_code == 400
         assert "detail" in response.json()
+        assert "empty" in response.json()["detail"].lower()
     
     def test_parse_with_invalid_pdf(self, test_client, sample_invalid_pdf):
         """Test parse endpoint with invalid PDF content."""
@@ -75,9 +76,12 @@ class TestParseEndpoint:
         }
         response = test_client.post("/v1/parse", files=files)
         
-        # Should return 500 Internal Server Error (PDF parsing error)
-        assert response.status_code == 500
+        # Should return 400 (invalid format) or 500 (internal error) with sanitized message
+        assert response.status_code in [400, 500]
         assert "detail" in response.json()
+        # Verify error message is sanitized (doesn't expose internal details)
+        detail = response.json()["detail"]
+        assert "internal server error" in detail.lower() or "invalid pdf" in detail.lower()
     
     @pytest.mark.skipif(
         not os.path.exists("tests/test_files/credit_report.pdf"),
@@ -118,16 +122,18 @@ class TestParseEndpoint:
             assert "X" in id_value or "*" in id_value  # Should be masked
     
     def test_parse_large_file(self, test_client):
-        """Test parse endpoint with a large file."""
-        # Create a 15MB file (larger than typical PDF)
-        large_content = b"0" * (15 * 1024 * 1024)
+        """Test parse endpoint with a large file exceeding size limit."""
+        # Create a 15MB file (larger than 10MB limit)
+        large_content = b"%PDF-1.4" + b"0" * (15 * 1024 * 1024)
         files = {
             "file": ("large.pdf", large_content, "application/pdf")
         }
         response = test_client.post("/v1/parse", files=files)
         
-        # Should either reject (413) or handle it (400/500)
-        assert response.status_code in [413, 400, 500]
+        # Should return 413 Payload Too Large
+        assert response.status_code == 413
+        assert "detail" in response.json()
+        assert "too large" in response.json()["detail"].lower()
     
     def test_parse_response_schema(self, test_client, sample_invalid_pdf):
         """Test that error responses have correct schema."""
@@ -169,6 +175,22 @@ class TestAPIDocumentation:
         assert "info" in schema
         assert schema["info"]["title"] == "TransUnion PDF to JSON API"
         assert schema["info"]["version"] == "1.0.0"
+    
+    def test_security_headers_present(self, test_client):
+        """Test that security headers are present in responses."""
+        response = test_client.get("/v1/health")
+        
+        assert response.status_code == 200
+        
+        # Verify security headers
+        headers = response.headers
+        assert headers.get("X-Content-Type-Options") == "nosniff"
+        assert headers.get("X-Frame-Options") == "DENY"
+        assert headers.get("X-XSS-Protection") == "1; mode=block"
+        assert "Content-Security-Policy" in headers
+        assert headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+        assert headers.get("X-Download-Options") == "noopen"
+        assert headers.get("X-DNS-Prefetch-Control") == "off"
 
 
 class TestConcurrentRequests:
