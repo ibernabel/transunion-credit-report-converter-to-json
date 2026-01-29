@@ -7,6 +7,9 @@ Tests all API endpoints including health checks and PDF parsing.
 import os
 import pytest
 from io import BytesIO
+import json
+import jsonschema
+from pathlib import Path
 from fastapi.testclient import TestClient
 
 
@@ -77,7 +80,7 @@ class TestParseEndpoint:
         assert "detail" in response.json()
     
     @pytest.mark.skipif(
-        not os.path.exists("tests/test_files/test_credit_report.pdf"),
+        not os.path.exists("tests/test_files/credit_report.pdf"),
         reason="Test PDF file not available"
     )
     def test_parse_with_valid_pdf(self, test_client, test_pdf_path):
@@ -92,13 +95,25 @@ class TestParseEndpoint:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify response structure
+        # Validate against JSON schema if available
+        schema_path = test_pdf_path.parent / "expected-output.json"
+        if schema_path.exists():
+            with open(schema_path, "r") as f:
+                schema = json.load(f)
+            # Validate response against schema
+            jsonschema.validate(instance=data, schema=schema)
+        
+        # Verify response structure basics (redundant with schema but good for specific checks)
         assert "inquirer" in data
         assert "personal_data" in data
         assert "score" in data
         
         # Verify PII scrubbing was applied
-        if "identification" in data["personal_data"]:
+        # Verify PII scrubbing was applied
+        if "cedula" in data["personal_data"]:
+            id_value = data["personal_data"]["cedula"]
+            assert "X" in id_value or "*" in id_value  # Should be masked
+        elif "identification" in data["personal_data"]:
             id_value = data["personal_data"]["identification"]
             assert "X" in id_value or "*" in id_value  # Should be masked
     
@@ -175,7 +190,7 @@ class TestConcurrentRequests:
         assert all(r.json()["status"] == "healthy" for r in responses)
     
     @pytest.mark.skipif(
-        not os.path.exists("tests/test_files/test_credit_report.pdf"),
+        not os.path.exists("tests/test_files/credit_report.pdf"),
         reason="Test PDF file not available"
     )
     def test_concurrent_parse_requests(self, test_client, test_pdf_path):

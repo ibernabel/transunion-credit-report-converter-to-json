@@ -259,7 +259,7 @@ class ParserEngine:
                     # For the first record, we might have wrapped subscriber text
                     # For subsequent ones, we use the same header info
                     status_kw_pat = r"(al dia|vigente|cancelada|atraso|proceso judicial|reestructurado|legal)"
-                    date_pat = r"\d{2}/\d{4}"
+                    date_pat = r"\d{2}/\d{2}/\d{4}|\d{2}/\d{4}"
                     
                     wrap_match = re.search(rf"(.*?)(?=\s*(?:{status_kw_pat}|{date_pat}))", record_content, re.DOTALL | re.I)
                     
@@ -301,13 +301,14 @@ class ParserEngine:
             vector = [int(c) if c.isdigit() else None for c in raw_v]
             content = content[:vector_match.start()] + content[vector_match.end():]
 
-        # 2. Dates (MM/YYYY)
-        dates = re.findall(r"(\d{2}/\d{4})", content)
+        # 2. Dates (DD/MM/YYYY or MM/YYYY)
+        # Match full dates (DD/MM/YYYY) or partial dates (MM/YYYY)
+        dates = re.findall(r"(\d{2}/\d{2}/\d{4}|\d{2}/\d{4})", content)
         update_date = dates[0] if len(dates) > 0 else "n/a"
         opening_date = dates[1] if len(dates) > 1 else "n/a"
         expiration_date = dates[2] if len(dates) > 2 else None
         # Remove all dates to avoid picking them up as numbers
-        content = re.sub(r"\d{2}/\d{4}", " ", content)
+        content = re.sub(r"\d{2}/\d{2}/\d{4}|\d{2}/\d{4}", " ", content)
 
         # 3. Currency (DOP/USD/RD$/US$)
         currency_match = re.search(r"(?:\b)(dop|usd|rd\$|us\$)", content, re.I)

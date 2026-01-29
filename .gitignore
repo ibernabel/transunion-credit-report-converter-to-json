@@ -192,3 +192,9 @@ logs/
 backups/
 temp_uploads/
 myenv/
+
+# Session tracking
+session_track.csv
+
+#
+legacy_backup/

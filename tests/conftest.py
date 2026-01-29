@@ -41,7 +41,7 @@ def test_pdf_path(test_files_dir):
     Returns:
         Path: Path to test PDF file (if it exists)
     """
-    pdf_path = test_files_dir / "test_credit_report.pdf"
+    pdf_path = test_files_dir / "credit_report.pdf"
     return pdf_path if pdf_path.exists() else None
 
 
