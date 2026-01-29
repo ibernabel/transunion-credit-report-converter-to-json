@@ -196,5 +196,16 @@ myenv/
 # Session tracking
 session_track.csv
 
-#
+# PII Protection - Prevent sensitive data commits
+# Test files with real data
+tests/test_files/test_credit_report.pdf
+tests/test_files/credit_report.pdf
+**/test_credit_report*.pdf
+
+# Legacy backup directory (contains historical PII)
 legacy_backup/
+
+# Debug dumps that may contain PII
+pdf_dump.txt
+*_dump.txt
+debug/*.txt
