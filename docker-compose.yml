@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -18,8 +18,10 @@ services:
     environment:
       - PYTHONPATH=/app
       - DEBUG=1
-      - MAX_WORKERS=1  # Single worker for development
+      - MAX_WORKERS=1 # Single worker for development
       - LOG_LEVEL=debug
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - MAX_FILE_SIZE_MB=10
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
       interval: 30s

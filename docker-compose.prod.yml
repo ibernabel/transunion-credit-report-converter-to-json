@@ -20,6 +20,8 @@ services:
       - LOG_LEVEL=info
       - MAX_LOG_SIZE_MB=100
       - BACKUP_RETENTION_DAYS=7
+      - ALLOWED_ORIGINS=https://yourdomain.com
+      - MAX_FILE_SIZE_MB=10
     deploy:
       resources:
         limits:

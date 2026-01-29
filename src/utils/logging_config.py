@@ -11,6 +11,7 @@ from pathlib import Path
 from pythonjsonlogger import jsonlogger
 from datetime import datetime
 from typing import Dict, Any
+from src.utils.pii_filter import PIIFilter
 
 
 # Create logs directory if it doesn't exist
@@ -85,6 +86,11 @@ def setup_logging() -> logging.Logger:
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
 
+    # Add PII filter to prevent sensitive data logging
+    pii_filter = PIIFilter()
+    console_handler.addFilter(pii_filter)
+    file_handler.addFilter(pii_filter)
+
     # Add handlers to logger
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
@@ -116,6 +122,9 @@ def setup_monitoring_logger() -> logging.Logger:
 
     # Set formatter for handler
     file_handler.setFormatter(formatter)
+
+    # Add PII filter to prevent sensitive data logging
+    file_handler.addFilter(PIIFilter())
 
     # Add handler to logger
     logger.addHandler(file_handler)

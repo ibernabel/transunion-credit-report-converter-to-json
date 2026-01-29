@@ -6,10 +6,13 @@ Production-ready FastAPI service to parse TransUnion Credit Reports into structu
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import asyncio
+import os
 
 from src.api.routes import router
 from src.middleware.logging_middleware import logging_middleware, start_metrics_logging
+from src.middleware.security_headers import security_headers_middleware
 from src.utils.logging_config import api_logger
 
 
@@ -59,6 +62,20 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Configure CORS - restrict origins in production
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins.split(","),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    max_age=600,  # Cache preflight requests for 10 minutes
+)
+
+# Add security headers middleware
+app.middleware("http")(security_headers_middleware)
 
 # Add logging middleware
 app.middleware("http")(logging_middleware)
