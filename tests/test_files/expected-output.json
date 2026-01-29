@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "inquirer": {
+      "type": "object",
+      "properties": {
+        "suscriptor": { "type": ["string", "null"] },
+        "usuario": { "type": ["string", "null"] },
+        "fecha_consulta": { "type": ["string", "null"] },
+        "hora_consulta": { "type": ["string", "null"] }
+      },
+      "required": ["suscriptor", "usuario"]
+    },
+    "personal_data": {
+      "type": "object",
+      "properties": {
+        "cedula": { "type": "string" },
+        "nombres": { "type": "string" },
+        "apellidos": { "type": "string" },
+        "fecha_nacimiento": { "type": "string" },
+        "edad": { "type": ["integer", "null"] },
+        "ocupacion": { "type": ["string", "null"] },
+        "lugar_nacimiento": { "type": ["string", "null"] },
+        "pasaporte": { "type": ["string", "null"] },
+        "estado_civil": { "type": ["string", "null"] },
+        "phones": {
+          "type": "object",
+          "properties": {
+            "casa": { "type": ["string", "null"] },
+            "trabajo": { "type": ["string", "null"] },
+            "celular": { "type": ["string", "null"] }
+          }
+        },
+        "direcciones": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rnc": { "type": ["string", "null"] }
+      },
+      "required": ["cedula", "nombres", "apellidos"]
+    },
+    "score": {
+      "type": ["object", "null"],
+      "properties": {
+        "score": { "type": ["integer", "null"] },
+        "factors": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "summary_open_accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subscriber": { "type": "string" },
+          "accounts_amount": { "type": "integer" },
+          "account_type": { "type": "string" },
+          "credit_amount_dop": { "type": "number" },
+          "credit_amount_usd": { "type": "number" },
+          "current_balance_dop": { "type": "number" },
+          "current_balance_usd": { "type": "number" },
+          "current_overdue_dop": { "type": "number" },
+          "current_overdue_usd": { "type": "number" },
+          "utilization_percent_dop": { "type": "number" },
+          "utilization_percent_usd": { "type": "number" }
+        }
+      }
+    },
+    "details_open_accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+            "account_type": { "type": "string" },
+            "subscriber": { "type": "string" },
+            "status": { "type": "string" },
+            "update_date": { "type": "string" },
+            "opening_date": { "type": "string" },
+            "expiration_date": { "type": ["string", "null"] },
+            "currency": { "type": "string" },
+            "credit_limit": { "type": "number" },
+            "current_balance": { "type": "number" },
+            "balance_in_arrears": { "type": "number" },
+            "minimum_payment_installment": { "type": "number" },
+            "no_installments_modality": { "type": "string" },
+            "behavior_vector_last_12_months": {
+                "type": "array",
+                "items": { "type": ["integer", "null"] }
+            }
+        }
+      }
+    }
+  },
+  "required": ["inquirer", "personal_data"]
+}
