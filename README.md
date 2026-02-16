@@ -20,7 +20,7 @@ Production-ready FastAPI service that converts **TransUnion Credit Reports** (PD
 - ✅ **Automated Backups** - Daily backups with 7-day retention
 - ✅ **Docker Ready** - Production-ready containers with health checks
 - ✅ **Interactive API Docs** - Auto-generated Swagger/ReDoc documentation
-- ✅ **Frontend UI** - Modern React interface for upload and visualization
+- ✅ **Interactive CLI** - Robust command-line interface with `rich` formatting
 
 ---
 
@@ -72,10 +72,11 @@ cd transunion-pdf-to-json
 # Install dependencies (Python 3.12+ required)
 pip install -e .
 
-# Start development server
-uvicorn src.main:app --reload
+# Start development server (API)
+uv run python src/cli.py serve --reload
 
-# API available at http://localhost:8000
+# Use the CLI to parse a file
+uv run python src/cli.py parse --input path/to/report.pdf
 ```
 
 ---
@@ -171,7 +172,7 @@ print(f"Accounts: {len(data['details_open_accounts'])}")
 
 ### cURL Examples
 
-```bash
+````bash
 # Health check
 curl http://localhost:8000/v1/health
 
@@ -181,10 +182,22 @@ curl -X POST "http://localhost:8000/v1/parse" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@credit_report.pdf"
 
-# Pretty print JSON response
-curl -X POST "http://localhost:8000/v1/parse" \
-  -F "file=@credit_report.pdf" | jq '.'
-```
+### CLI Usage
+
+The CLI provides a powerful way to interact with the engine without the API.
+
+```bash
+# Parse a PDF and save result to JSON
+uv run python src/cli.py parse --input report.pdf --output result.json
+
+# Parse and show pretty JSON in terminal
+uv run python src/cli.py parse --input report.pdf
+
+# Start the API server via CLI
+uv run python src/cli.py serve --port 8000
+````
+
+````
 
 ---
 
@@ -221,7 +234,7 @@ Once running, visit:
   "summary_open_accounts": [],
   "details_open_accounts": []
 }
-```
+````
 
 **Note**: PII is automatically scrubbed in responses.
 
@@ -390,8 +403,8 @@ transunion-pdf-to-json/
 │   │   ├── logging_config.py
 │   │   └── backup.py
 │   ├── main.py                 # Application entry point
+│   ├── cli.py                  # Interactive CLI entry point
 │   └── maintenance.py          # Maintenance scheduler
-├── frontend/                   # React UI (Vite + shadcn/ui)
 ├── tests/                      # Test suite
 ├── docs/                       # Documentation
 │   ├── deployment/             # Deployment guides
@@ -480,7 +493,7 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - Built with [FastAPI](https://fastapi.tiangolo.com/)
 - PDF processing powered by [PyMuPDF](https://pymupdf.readthedocs.io/)
 - Data validation with [Pydantic](https://pydantic-docs.helpmanual.io/)
-- Frontend built with [Vite](https://vitejs.dev/) and [shadcn/ui](https://ui.shadcn.com/)
+- CLI powered by [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/)
 
 ---
 

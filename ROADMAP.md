@@ -1,8 +1,8 @@
 # TransUnion PDF to JSON API - Roadmap
 
-**Current Version**: 1.0.0  
-**Status**: Production Ready  
-**Last Updated**: 2026-01-29
+**Current Version**: 1.1.0  
+**Status**: Backend-only / CLI-First  
+**Last Updated**: 2026-02-16
 
 ---
 
@@ -12,11 +12,13 @@ Transform the TransUnion PDF parser from a standalone API into a comprehensive c
 
 ---
 
-## Current Status (v1.0.0) ✅
+## Current Status (v1.1.0) ✅
 
 ### Completed Features
 
 - ✅ FastAPI-based REST API
+- ✅ Interactive CLI (Typer + Rich)
+- ✅ Standardized with `uv` package manager
 - ✅ TransUnion PDF parsing with multi-currency support
 - ✅ PII scrubbing for data privacy
 - ✅ Structured JSON logging
