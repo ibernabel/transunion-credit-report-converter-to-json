@@ -507,4 +507,14 @@ If you encounter issues:
 
 ---
 
+## ⚠️ Legal Disclaimer
+
+**TransUnion®** is a registered trademark of TransUnion LLC.
+
+This project is an independent, open-source tool developed for **educational and private purposes only**. It is **not affiliated with, endorsed by, or connected to TransUnion LLC** or any of its subsidiaries.
+
+The software is provided "as is", without warranty of any kind. The developers and contributors of this project assume no liability for any direct or indirect damages resulting from the use of this software. Users are responsible for ensuring their use of this tool complies with all applicable local laws and regulations.
+
+---
+
 **Made with ❤️ by Idequel Bernabel**
