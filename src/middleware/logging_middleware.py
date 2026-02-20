@@ -1,5 +1,5 @@
 """
-Logging middleware for TransUnion PDF to JSON API.
+Logging middleware for CreditGraph Parser API.
 
 Provides request/response logging with timing information and system metrics monitoring.
 """
@@ -14,16 +14,16 @@ from src.utils.logging_config import api_logger, log_system_metrics
 async def logging_middleware(request: Request, call_next: Callable):
     """
     Middleware to log request and response information.
-    
+
     Args:
         request: FastAPI request object
         call_next: Next middleware/route handler
-        
+
     Returns:
         Response object
     """
     start_time = time.time()
-    
+
     # Log request
     api_logger.info(
         "Incoming request",
@@ -39,7 +39,7 @@ async def logging_middleware(request: Request, call_next: Callable):
     try:
         response = await call_next(request)
         process_time = time.time() - start_time
-        
+
         # Log response
         api_logger.info(
             "Request completed",
@@ -50,12 +50,12 @@ async def logging_middleware(request: Request, call_next: Callable):
                 'process_time': f"{process_time:.3f}s"
             }
         )
-        
+
         return response
-        
+
     except Exception as e:
         process_time = time.time() - start_time
-        
+
         # Log error
         api_logger.error(
             "Request failed",
@@ -73,7 +73,7 @@ async def logging_middleware(request: Request, call_next: Callable):
 async def start_metrics_logging():
     """
     Background task to periodically log system metrics.
-    
+
     Logs system metrics (CPU, memory, disk usage) every 60 seconds.
     """
     while True:

@@ -1,5 +1,5 @@
 """
-TransUnion PDF to JSON API - Interactive CLI for Credit Report Parsing.
+CreditGraph Parser API - Interactive CLI for Credit Report Parsing.
 """
 
 from src.utils.logging_config import api_logger
@@ -22,7 +22,7 @@ if str(root_dir) not in sys.path:
 
 
 app = typer.Typer(
-    help="TransUnion PDF to JSON API - Interactive CLI for TransUnion Credit Report Parsing",
+    help="CreditGraph Parser API - Interactive CLI for Credit Report Parsing",
     add_completion=False,
 )
 console = Console()
@@ -32,7 +32,7 @@ def version_callback(value: bool):
     if value:
         from src.main import app as fastapi_app
         console.print(
-            f"TransUnion PDF to JSON API CLI [bold]v{fastapi_app.version}[/bold]")
+            f"CreditGraph Parser API CLI [bold]v{fastapi_app.version}[/bold]")
         raise typer.Exit()
 
 
@@ -43,7 +43,7 @@ def main(
     ),
 ):
     """
-    TransUnion PDF to JSON API - Interactive CLI
+    CreditGraph Parser API - Interactive CLI
     """
     pass
 
@@ -51,7 +51,7 @@ def main(
 @app.command()
 def parse(
     input_file: Path = typer.Option(
-        ..., "--input", "-i", help="Path to the TransUnion PDF credit report", exists=True, dir_okay=False
+        ..., "--input", "-i", help="Path to the PDF credit report", exists=True, dir_okay=False
     ),
     output_file: Optional[Path] = typer.Option(
         None, "--output", "-o", help="Path to save the JSON result (pii-scrubbed)"
@@ -60,7 +60,7 @@ def parse(
         True, "--pretty/--no-pretty", help="Format JSON output with indentation"),
 ):
     """
-    Parse a TransUnion PDF credit report into structured JSON.
+    Parse a PDF credit report into structured JSON.
     """
     if not input_file.suffix.lower() == ".pdf":
         console.print("[red]Error:[/red] Only PDF files are supported.")
@@ -122,7 +122,7 @@ def serve(
     Start the FastAPI server.
     """
     console.print(
-        f"[bold blue]Starting TransUnion PDF to JSON API API server on {host}:{port}...[/bold blue]")
+        f"[bold blue]Starting CreditGraph Parser API server on {host}:{port}...[/bold blue]")
     uvicorn.run("src.main:app", host=host, port=port, reload=reload)
 
 
@@ -132,7 +132,8 @@ def version():
     Show application version.
     """
     from src.main import app as fastapi_app
-    console.print(f"TransUnion PDF to JSON API CLI [bold]v{fastapi_app.version}[/bold]")
+    console.print(
+        f"CreditGraph Parser API CLI [bold]v{fastapi_app.version}[/bold]")
 
 
 if __name__ == "__main__":

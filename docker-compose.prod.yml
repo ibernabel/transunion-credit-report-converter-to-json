@@ -1,11 +1,11 @@
-version: '3.8'
+version: "3.8"
 
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: transunion-parser-prod
+    container_name: creditgraph-parser-prod
     ports:
       - "8000:8000"
     volumes:
@@ -16,7 +16,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - DEBUG=0
-      - MAX_WORKERS=4  # Multiple workers for production
+      - MAX_WORKERS=4 # Multiple workers for production
       - LOG_LEVEL=info
       - MAX_LOG_SIZE_MB=100
       - BACKUP_RETENTION_DAYS=7
@@ -25,10 +25,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 2G
         reservations:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
@@ -42,4 +42,4 @@ services:
 
 networks:
   default:
-    name: transunion-parser-prod-network
+    name: creditgraph-parser-prod-network

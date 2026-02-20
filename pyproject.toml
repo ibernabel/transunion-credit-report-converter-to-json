@@ -1,7 +1,7 @@
 [project]
-name = "transunion-pdf-to-json"
+name = "creditgraph-parser"
 version = "1.0.0"
-description = "Production-ready FastAPI service to parse TransUnion Credit Reports (PDF) into structured JSON with PII scrubbing"
+description = "Production-ready FastAPI service to parse Credit Reports (PDF) into structured JSON with CreditGraph AI patterns"
 authors = [
     {name = "Idequel Bernabel"}
 ]

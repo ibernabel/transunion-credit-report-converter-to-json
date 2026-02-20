@@ -1,7 +1,7 @@
 """
-TransUnion PDF to JSON API - Main Application Entry Point.
+CreditGraph Parser API - Main Application Entry Point.
 
-Production-ready FastAPI service to parse TransUnion Credit Reports into structured JSON.
+Production-ready FastAPI service to parse credit reports into structured JSON using CreditGraph AI patterns.
 """
 
 from contextlib import asynccontextmanager
@@ -20,19 +20,19 @@ from src.utils.logging_config import api_logger
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager for application startup and shutdown.
-    
+
     Handles:
     - Starting background metrics logging task
     - Logging application lifecycle events
     """
     # Startup
     api_logger.info("Application starting up", extra={"version": app.version})
-    
+
     # Start metrics logging in background
     metrics_task = asyncio.create_task(start_metrics_logging())
-    
+
     yield
-    
+
     # Shutdown
     api_logger.info("Application shutting down")
     metrics_task.cancel()
@@ -43,9 +43,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="TransUnion PDF to JSON API",
+    title="CreditGraph Parser API",
     description="""
-    Production-ready API to parse TransUnion Credit Reports into structured JSON with PII scrubbing.
+    Production-ready API to parse credit reports into structured JSON with CreditGraph AI patterns and PII scrubbing.
     
     ## Features
     - PDF credit report parsing
@@ -64,7 +64,8 @@ app = FastAPI(
 )
 
 # Configure CORS - restrict origins in production
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins.split(","),
@@ -88,12 +89,12 @@ app.include_router(router)
 async def root():
     """
     Root endpoint providing API information and navigation.
-    
+
     Returns:
         dict: API welcome message and endpoint links
     """
     return {
-        "message": "Welcome to TransUnion PDF to JSON API",
+        "message": "Welcome to CreditGraph Parser API",
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/v1/health",
@@ -104,4 +105,3 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

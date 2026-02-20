@@ -1,5 +1,5 @@
 """
-Logging configuration for TransUnion PDF to JSON API.
+Logging configuration for CreditGraph Parser API.
 
 Provides structured JSON logging with system metrics monitoring.
 """
@@ -21,15 +21,16 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter that adds timestamp and level fields."""
-    
+
     def add_fields(
-        self, 
-        log_record: Dict[str, Any], 
-        record: logging.LogRecord, 
+        self,
+        log_record: Dict[str, Any],
+        record: logging.LogRecord,
         message_dict: Dict[str, Any]
     ) -> None:
         """Add custom fields to log records."""
-        super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
+        super(CustomJsonFormatter, self).add_fields(
+            log_record, record, message_dict)
         log_record['timestamp'] = datetime.utcnow().isoformat()
         log_record['level'] = record.levelname
         log_record['module'] = record.module
@@ -38,7 +39,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 def get_system_metrics() -> Dict[str, float]:
     """
     Get current system resource usage metrics.
-    
+
     Returns:
         dict: System metrics including CPU, memory, and disk usage percentages
     """
@@ -61,14 +62,14 @@ def get_system_metrics() -> Dict[str, float]:
 def setup_logging() -> logging.Logger:
     """
     Configure application logging with JSON formatting.
-    
+
     Returns:
         logging.Logger: Configured API logger
     """
     # Create logger
-    logger = logging.getLogger("transunion_api")
+    logger = logging.getLogger("creditgraph_api")
     logger.setLevel(logging.INFO)
-    
+
     # Prevent duplicate handlers
     if logger.handlers:
         return logger
@@ -76,7 +77,7 @@ def setup_logging() -> logging.Logger:
     # Create handlers
     console_handler = logging.StreamHandler(sys.stdout)
     file_handler = logging.FileHandler(LOGS_DIR / "api.log")
-    
+
     # Create formatter
     formatter = CustomJsonFormatter(
         '%(timestamp)s %(level)s %(name)s %(module)s %(message)s'
@@ -101,20 +102,20 @@ def setup_logging() -> logging.Logger:
 def setup_monitoring_logger() -> logging.Logger:
     """
     Configure system monitoring logging.
-    
+
     Returns:
         logging.Logger: Configured monitoring logger
     """
     logger = logging.getLogger("monitoring")
     logger.setLevel(logging.INFO)
-    
+
     # Prevent duplicate handlers
     if logger.handlers:
         return logger
 
     # Create handler for monitoring logs
     file_handler = logging.FileHandler(LOGS_DIR / "monitoring.log")
-    
+
     # Create formatter
     formatter = CustomJsonFormatter(
         '%(timestamp)s %(level)s %(name)s %(message)s'

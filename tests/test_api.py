@@ -15,18 +15,18 @@ from fastapi.testclient import TestClient
 
 class TestHealthEndpoint:
     """Tests for the health check endpoint."""
-    
+
     def test_health_check(self, test_client):
         """Test health check endpoint returns healthy status."""
         response = test_client.get("/v1/health")
-        
+
         assert response.status_code == 200
         assert response.json() == {"status": "healthy"}
-    
+
     def test_root_endpoint(self, test_client):
         """Test root endpoint returns API information."""
         response = test_client.get("/")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
@@ -37,52 +37,52 @@ class TestHealthEndpoint:
 
 class TestParseEndpoint:
     """Tests for the PDF parsing endpoint."""
-    
+
     def test_parse_without_file(self, test_client):
         """Test parse endpoint without providing a file."""
         response = test_client.post("/v1/parse")
-        
+
         # Should return 422 Unprocessable Entity (missing required field)
         assert response.status_code == 422
-    
+
     def test_parse_with_invalid_file_type(self, test_client):
         """Test parse endpoint with non-PDF file."""
         files = {
             "file": ("test.jpg", b"fake image content", "image/jpeg")
         }
         response = test_client.post("/v1/parse", files=files)
-        
+
         # Should return 400 Bad Request
         assert response.status_code == 400
         assert "detail" in response.json()
         assert "pdf" in response.json()["detail"].lower()
-    
+
     def test_parse_with_empty_file(self, test_client, sample_empty_file):
         """Test parse endpoint with empty PDF file."""
         files = {
             "file": ("empty.pdf", sample_empty_file, "application/pdf")
         }
         response = test_client.post("/v1/parse", files=files)
-        
+
         # Should return 400 Bad Request for empty file
         assert response.status_code == 400
         assert "detail" in response.json()
         assert "empty" in response.json()["detail"].lower()
-    
+
     def test_parse_with_invalid_pdf(self, test_client, sample_invalid_pdf):
         """Test parse endpoint with invalid PDF content."""
         files = {
             "file": ("invalid.pdf", sample_invalid_pdf, "application/pdf")
         }
         response = test_client.post("/v1/parse", files=files)
-        
+
         # Should return 400 (invalid format) or 500 (internal error) with sanitized message
         assert response.status_code in [400, 500]
         assert "detail" in response.json()
         # Verify error message is sanitized (doesn't expose internal details)
         detail = response.json()["detail"]
         assert "internal server error" in detail.lower() or "invalid pdf" in detail.lower()
-    
+
     @pytest.mark.skipif(
         not os.path.exists("tests/test_files/credit_report.pdf"),
         reason="Test PDF file not available"
@@ -94,11 +94,11 @@ class TestParseEndpoint:
                 "file": ("credit_report.pdf", f, "application/pdf")
             }
             response = test_client.post("/v1/parse", files=files)
-        
+
         # Should return 200 OK with parsed data
         assert response.status_code == 200
         data = response.json()
-        
+
         # Validate against JSON schema if available
         schema_path = test_pdf_path.parent / "expected-output.json"
         if schema_path.exists():
@@ -106,12 +106,12 @@ class TestParseEndpoint:
                 schema = json.load(f)
             # Validate response against schema
             jsonschema.validate(instance=data, schema=schema)
-        
+
         # Verify response structure basics (redundant with schema but good for specific checks)
         assert "inquirer" in data
         assert "personal_data" in data
         assert "score" in data
-        
+
         # Verify PII scrubbing was applied
         # Verify PII scrubbing was applied
         if "cedula" in data["personal_data"]:
@@ -120,7 +120,7 @@ class TestParseEndpoint:
         elif "identification" in data["personal_data"]:
             id_value = data["personal_data"]["identification"]
             assert "X" in id_value or "*" in id_value  # Should be masked
-    
+
     def test_parse_large_file(self, test_client):
         """Test parse endpoint with a large file exceeding size limit."""
         # Create a 15MB file (larger than 10MB limit)
@@ -129,19 +129,19 @@ class TestParseEndpoint:
             "file": ("large.pdf", large_content, "application/pdf")
         }
         response = test_client.post("/v1/parse", files=files)
-        
+
         # Should return 413 Payload Too Large
         assert response.status_code == 413
         assert "detail" in response.json()
         assert "too large" in response.json()["detail"].lower()
-    
+
     def test_parse_response_schema(self, test_client, sample_invalid_pdf):
         """Test that error responses have correct schema."""
         files = {
             "file": ("invalid.pdf", sample_invalid_pdf, "application/pdf")
         }
         response = test_client.post("/v1/parse", files=files)
-        
+
         # All errors should have 'detail' field
         assert "detail" in response.json()
         assert isinstance(response.json()["detail"], str)
@@ -149,68 +149,69 @@ class TestParseEndpoint:
 
 class TestAPIDocumentation:
     """Tests for API documentation endpoints."""
-    
+
     def test_swagger_docs_available(self, test_client):
         """Test that Swagger UI is accessible."""
         response = test_client.get("/docs")
-        
+
         assert response.status_code == 200
         assert "text/html" in response.headers.get("content-type", "")
-    
+
     def test_redoc_available(self, test_client):
         """Test that ReDoc is accessible."""
         response = test_client.get("/redoc")
-        
+
         assert response.status_code == 200
         assert "text/html" in response.headers.get("content-type", "")
-    
+
     def test_openapi_schema_available(self, test_client):
         """Test that OpenAPI schema is accessible."""
         response = test_client.get("/openapi.json")
-        
+
         assert response.status_code == 200
         schema = response.json()
-        
+
         assert "openapi" in schema
         assert "info" in schema
-        assert schema["info"]["title"] == "TransUnion PDF to JSON API"
+        assert schema["info"]["title"] == "CreditGraph Parser API"
         assert schema["info"]["version"] == "1.0.0"
-    
+
     def test_security_headers_present(self, test_client):
         """Test that security headers are present in responses."""
         response = test_client.get("/v1/health")
-        
+
         assert response.status_code == 200
-        
+
         # Verify security headers
         headers = response.headers
         assert headers.get("X-Content-Type-Options") == "nosniff"
         assert headers.get("X-Frame-Options") == "DENY"
         assert headers.get("X-XSS-Protection") == "1; mode=block"
         assert "Content-Security-Policy" in headers
-        assert headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+        assert headers.get(
+            "Referrer-Policy") == "strict-origin-when-cross-origin"
         assert headers.get("X-Download-Options") == "noopen"
         assert headers.get("X-DNS-Prefetch-Control") == "off"
 
 
 class TestConcurrentRequests:
     """Tests for concurrent API requests."""
-    
+
     def test_concurrent_health_checks(self, test_client):
         """Test multiple concurrent health check requests."""
         import concurrent.futures
-        
+
         def make_health_request():
             return test_client.get("/v1/health")
-        
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(make_health_request) for _ in range(10)]
             responses = [future.result() for future in futures]
-        
+
         # All requests should succeed
         assert all(r.status_code == 200 for r in responses)
         assert all(r.json()["status"] == "healthy" for r in responses)
-    
+
     @pytest.mark.skipif(
         not os.path.exists("tests/test_files/credit_report.pdf"),
         reason="Test PDF file not available"
@@ -218,23 +219,23 @@ class TestConcurrentRequests:
     def test_concurrent_parse_requests(self, test_client, test_pdf_path):
         """Test multiple concurrent parse requests."""
         import concurrent.futures
-        
+
         def make_parse_request():
             with open(test_pdf_path, "rb") as f:
                 files = {"file": ("credit_report.pdf", f, "application/pdf")}
                 return test_client.post("/v1/parse", files=files)
-        
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             futures = [executor.submit(make_parse_request) for _ in range(3)]
             responses = [future.result() for future in futures]
-        
+
         # All requests should complete (either success or expected error)
         assert all(r.status_code in [200, 400, 500] for r in responses)
 
 
 class TestErrorHandling:
     """Tests for error handling and edge cases."""
-    
+
     def test_parse_with_malformed_request(self, test_client):
         """Test parse endpoint with malformed request."""
         # Send request with wrong field name
@@ -242,9 +243,9 @@ class TestErrorHandling:
             "/v1/parse",
             files={"wrong_field": ("test.pdf", b"content", "application/pdf")}
         )
-        
+
         assert response.status_code == 422  # Validation error
-    
+
     def test_parse_with_multiple_files(self, test_client):
         """Test parse endpoint with multiple files (should only accept one)."""
         files = [
@@ -252,19 +253,19 @@ class TestErrorHandling:
             ("file", ("test2.pdf", b"content2", "application/pdf"))
         ]
         response = test_client.post("/v1/parse", files=files)
-        
+
         # Should process or reject appropriately
         assert response.status_code in [200, 400, 422, 500]
-    
+
     def test_invalid_endpoint(self, test_client):
         """Test accessing non-existent endpoint."""
         response = test_client.get("/v1/nonexistent")
-        
+
         assert response.status_code == 404
-    
+
     def test_wrong_http_method(self, test_client):
         """Test using wrong HTTP method on parse endpoint."""
         response = test_client.get("/v1/parse")
-        
+
         # Should return 405 Method Not Allowed
         assert response.status_code == 405

@@ -1,14 +1,14 @@
-# TransUnion PDF to JSON API - Roadmap
+# CreditGraph Parser - Roadmap
 
 **Current Version**: 1.1.0  
 **Status**: Backend-only / CLI-First  
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-18
 
 ---
 
 ## Vision
 
-Transform the TransUnion PDF parser from a standalone API into a comprehensive credit report management platform with enterprise-grade features including authentication, persistence, monitoring, and analytics.
+Transform the CreditGraph PDF parser from a standalone API into a comprehensive credit report management platform with enterprise-grade features including authentication, persistence, monitoring, and analytics.
 
 ---
 
@@ -19,7 +19,7 @@ Transform the TransUnion PDF parser from a standalone API into a comprehensive c
 - ✅ FastAPI-based REST API
 - ✅ Interactive CLI (Typer + Rich)
 - ✅ Standardized with `uv` package manager
-- ✅ TransUnion PDF parsing with multi-currency support
+- ✅ CreditGraph PDF parsing with multi-currency support
 - ✅ PII scrubbing for data privacy
 - ✅ Structured JSON logging
 - ✅ System metrics monitoring
@@ -172,18 +172,21 @@ jobs:
 - Pro tier: 100 requests/minute
 - Enterprise: Unlimited
 
-#### 3.3 Enhanced Security
+#### 3.3 Enhanced Security & Compliance
 
-**Status**: 🟢 Partially Complete (2026-01-29)  
+**Status**: ✅ Completed (2026-02-18)  
 **Priority**: High  
 **Estimated Effort**: 1 week
 
+- [x] Project rebranding to CreditGraph Parser ✅ (2026-02-18)
 - [x] CORS configuration for production ✅ (2026-01-29)
 - [x] Security headers (CSP, HSTS, X-Frame-Options, etc.) ✅ (2026-01-29)
 - [x] Input validation hardening (file size, type, empty files) ✅ (2026-01-29)
 - [x] XSS prevention (Pydantic validation + security headers) ✅ (2026-01-29)
 - [x] PII protection in logs (automated filtering) ✅ (2026-01-29)
 - [x] Audit logging for sensitive operations ✅ (2026-01-29)
+- [x] Legal compliance ADR (002-legal-compliance-mitigation.md) ✅ (2026-02-18)
+- [x] PII Filter hardening for Dominican formats ✅ (2026-02-18)
 - [ ] HTTPS enforcement (requires reverse proxy)
 - [ ] SQL injection prevention (when DB added)
 - [ ] Encrypted PII storage option
@@ -200,6 +203,7 @@ jobs:
 **Documentation:**
 
 - Security audit report: `docs/security-audit-2026-01-29.md`
+- Legal Mitigation ADR: `docs/decisions/002-legal-compliance-mitigation.md`
 - Implementation walkthrough: `docs/security-enhancements-walkthrough.md`
 
 **Security Score:** Improved from 7.5/10 to 9.5/10
@@ -535,6 +539,15 @@ We follow [Semantic Versioning](https://semver.org/):
 ---
 
 ## Changelog
+
+### v1.1.0 (2026-02-18) - Rebranding & Security Hardening
+
+- Project rebranded to **CreditGraph Parser**
+- Legal compliance and risk mitigation ADR
+- Hardened PII filtering for Dominican data
+- Strengthened regex engine for report parsing
+- Permissions-Policy header implementation
+- 44+ unit tests verified
 
 ### v1.0.0 (2026-01-29) - Initial Production Release
 

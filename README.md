@@ -1,17 +1,17 @@
-# TransUnion PDF to JSON API
+# CreditGraph Parser API
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](Dockerfile)
 
-Production-ready FastAPI service that converts **TransUnion Credit Reports** (PDF format) into structured JSON data with automatic **PII scrubbing** for data privacy.
+Production-ready FastAPI service that converts **Credit Reports** (PDF format) into structured JSON data using CreditGraph AI patterns with automatic **PII scrubbing** for data privacy.
 
 ---
 
 ## ✨ Features
 
-- ✅ **PDF Parsing** - Extract data from TransUnion credit report PDFs
+- ✅ **PDF Parsing** - Extract data from credit report PDFs
 - ✅ **Structured Output** - Validated JSON with Pydantic models
 - ✅ **PII Scrubbing** - Automatic masking of sensitive personal information
 - ✅ **Multi-currency Support** - Handles DOP and USD accounts
@@ -52,8 +52,8 @@ Production-ready FastAPI service that converts **TransUnion Credit Reports** (PD
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/transunion-pdf-to-json.git
-cd transunion-pdf-to-json
+git clone https://github.com/your-username/creditgraph-parser.git
+cd creditgraph-parser
 
 # Start with Docker Compose
 docker compose up
@@ -66,8 +66,8 @@ docker compose up
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/transunion-pdf-to-json.git
-cd transunion-pdf-to-json
+git clone https://github.com/your-username/creditgraph-parser.git
+cd creditgraph-parser
 
 # Install dependencies (Python 3.12+ required)
 pip install -e .
@@ -125,10 +125,10 @@ uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ```bash
 # Build image
-docker build -t transunion-parser:1.0.0 .
+docker build -t creditgraph-parser:1.0.0 .
 
 # Run container
-docker run -d -p 8000:8000 transunion-parser:1.0.0
+docker run -d -p 8000:8000 creditgraph-parser:1.0.0
 
 # Or use Docker Compose
 docker compose up -d               # Development
@@ -280,8 +280,8 @@ See the comprehensive [VPS Setup Guide](docs/deployment/vps_setup.md) for detail
 
 ```bash
 # On your VPS
-git clone https://github.com/your-username/transunion-pdf-to-json.git
-cd transunion-pdf-to-json
+git clone https://github.com/your-username/creditgraph-parser.git
+cd creditgraph-parser
 
 # Build and start
 docker compose -f docker-compose.prod.yml up -d
@@ -387,7 +387,7 @@ black src/
 ## 📁 Project Structure
 
 ```
-transunion-pdf-to-json/
+creditgraph-parser/
 ├── src/
 │   ├── api/                    # API routes and endpoints
 │   │   └── routes.py
@@ -422,7 +422,7 @@ transunion-pdf-to-json/
 
 ## 🗺️ Roadmap
 
-We're continuously improving the TransUnion parser with new features and enhancements!
+We're continuously improving the CreditGraph parser with new features and enhancements!
 
 ### Upcoming Features
 
@@ -511,9 +511,9 @@ If you encounter issues:
 
 **TransUnion®** is a registered trademark of TransUnion LLC.
 
-This project is an independent, open-source tool developed for **educational and private purposes only**. It is **not affiliated with, endorsed by, or connected to TransUnion LLC** or any of its subsidiaries.
+This project is an independent, open-source tool developed for **educational and private purposes only**. It is **not affiliated with, endorsed by, or connected to TransUnion LLC** or any of its subsidiaries. This tool is designed as a template for credit data extraction and does not constitute a bureau service.
 
-The software is provided "as is", without warranty of any kind. The developers and contributors of this project assume no liability for any direct or indirect damages resulting from the use of this software. Users are responsible for ensuring their use of this tool complies with all applicable local laws and regulations.
+The software is provided "as is", without warranty of any kind. The developers and contributors of this project assume no liability for any direct or indirect damages resulting from the use of this software. Users are responsible for ensuring their use of this tool complies with all applicable local laws, including **Ley 172-13** in the Dominican Republic. Any automated extraction of data should be done with the express consent of the data owner and in accordance with the terms of service of the original data provider.
 
 ---
 

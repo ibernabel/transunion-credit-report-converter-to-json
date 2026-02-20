@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: transunion-parser-dev
+    container_name: creditgraph-parser-dev
     ports:
       - "8000:8000"
     volumes:
@@ -33,4 +33,4 @@ services:
 
 networks:
   default:
-    name: transunion-parser-network
+    name: creditgraph-parser-network

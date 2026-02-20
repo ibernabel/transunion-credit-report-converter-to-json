@@ -1,5 +1,5 @@
 """
-Backup management utilities for TransUnion PDF to JSON API.
+Backup management utilities for CreditGraph Parser API.
 
 Provides backup creation, cleanup, and log rotation functionality.
 """
@@ -15,18 +15,18 @@ from src.utils.logging_config import api_logger
 class BackupManager:
     """
     Manages backup operations for logs and temporary files.
-    
+
     Features:
     - Automatic backup creation
     - Old backup cleanup
     - Log file rotation
     """
-    
+
     def __init__(self):
         """Initialize backup manager with default directories."""
         self.backup_dir = Path(__file__).parent.parent.parent / "backups"
         self.backup_dir.mkdir(exist_ok=True)
-        
+
         # Directories to backup
         self.base_path = Path(__file__).parent.parent.parent
         self.dirs_to_backup = [
@@ -37,10 +37,10 @@ class BackupManager:
     def create_backup(self) -> Path:
         """
         Create a backup of important directories and files.
-        
+
         Returns:
             Path: Path to the created backup file
-            
+
         Raises:
             Exception: If backup creation fails
         """
@@ -84,18 +84,19 @@ class BackupManager:
     def cleanup_old_backups(self, keep_days: int = 7):
         """
         Remove backups older than specified days.
-        
+
         Args:
             keep_days: Number of days to keep backups for (default: 7)
         """
         try:
             current_time = datetime.now().timestamp()
             removed_count = 0
-            
+
             # Check each file in backup directory
             for backup_file in self.backup_dir.glob("backup_*.tar.gz"):
                 file_age_seconds = current_time - os.path.getctime(backup_file)
-                if file_age_seconds > (keep_days * 24 * 3600):  # Convert days to seconds
+                # Convert days to seconds
+                if file_age_seconds > (keep_days * 24 * 3600):
                     backup_file.unlink()
                     removed_count += 1
                     api_logger.info(
@@ -105,7 +106,7 @@ class BackupManager:
                             'age_days': file_age_seconds / (24 * 3600)
                         }
                     )
-            
+
             if removed_count > 0:
                 api_logger.info(
                     f"Cleanup completed: {removed_count} old backup(s) removed"
@@ -124,7 +125,7 @@ class BackupManager:
     def rotate_logs(self, max_size_mb: int = 100):
         """
         Rotate log files if they exceed maximum size.
-        
+
         Args:
             max_size_mb: Maximum size of log files in megabytes (default: 100)
         """
@@ -135,21 +136,22 @@ class BackupManager:
 
             rotated_count = 0
             max_size_bytes = max_size_mb * 1024 * 1024
-            
+
             for log_file in log_dir.glob("*.log"):
                 # Check if file exceeds max size
                 file_size = os.path.getsize(log_file)
                 if file_size > max_size_bytes:
                     # Create new filename with timestamp
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    new_name = log_file.with_name(f"{log_file.stem}_{timestamp}.log")
-                    
+                    new_name = log_file.with_name(
+                        f"{log_file.stem}_{timestamp}.log")
+
                     # Rename current log file
                     shutil.move(log_file, new_name)
-                    
+
                     # Create new empty log file
                     log_file.touch()
-                    
+
                     rotated_count += 1
                     api_logger.info(
                         "Log file rotated",
@@ -159,7 +161,7 @@ class BackupManager:
                             'size_mb': f"{file_size / (1024 * 1024):.2f}"
                         }
                     )
-            
+
             if rotated_count > 0:
                 api_logger.info(
                     f"Log rotation completed: {rotated_count} file(s) rotated"

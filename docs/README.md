@@ -1,8 +1,8 @@
-# TransUnion PDF to JSON - Documentation
+# CreditGraph Parser - Documentation
 
 ## 📚 Documentation Index
 
-Welcome to the project documentation. This directory contains all technical documentation for the TransUnion PDF to JSON API service.
+Welcome to the project documentation. This directory contains all technical documentation for the CreditGraph Parser API service.
 
 ---
 
@@ -23,11 +23,12 @@ docs/
 
 ## 🗺️ Quick Navigation
 
-### Planning Documents
+### Planning & Decisions
 
-| Document                                 | Description                              |
-| ---------------------------------------- | ---------------------------------------- |
-| [Architecture](planning/architecture.md) | System architecture and design decisions |
+| Document                                                           | Description                              |
+| ------------------------------------------------------------------ | ---------------------------------------- |
+| [Architecture](planning/architecture.md)                           | System architecture and design decisions |
+| [Legal & Mitigation](decisions/002-legal-compliance-mitigation.md) | ADR on legal compliance (Ley 172-13)     |
 
 ### Implementation Documents
 
